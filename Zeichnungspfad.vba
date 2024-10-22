@@ -2,37 +2,67 @@ Function FileExists(filePath As String) As Boolean
     FileExists = Dir(filePath) <> ""
 End Function
 
-Sub SetHyperlinkAGZeichnung()
+Sub UpdateHyperlinksInAGSheets()
+    Dim ws As Worksheet
+    For Each ws In ThisWorkbook.Sheets
+        If Left(ws.Name, 2) = "AG" Then
+            SetHyperlinkAGZeichnungforSheet ws
+        End If
+    Next ws
+End Sub
+
+Sub SetHyperlinkAGZeichnungforSheet(ws As Worksheet)
     Dim basePath As String
     Dim articleFolder As String
     Dim firstOptionPath As String
     Dim secondOptionPath As String
     Dim fallbackPath As String
     Dim fileName As String
-    Dim cell As Range
+    Dim info2 As String
+    Dim artikelNummer As String
+    Dim errMsg As String
     
-    ' Stamm-Pfad zusammenstellen
+    ' Basis-Pfad setzen
     basePath = "\\MS01\Datenpfad\Betriebsorganisation\Fertigungsdaten\"
-    articleFolder = Left(ActiveSheet.Range("F4").Value, 1) & "\" & ActiveSheet.Range("F4").Value & "\" & ActiveSheet.Range("F2").Value & "\"
     
+    ' Fehlerüberprüfung für notwendige Felder
+    errMsg = ""
+    If ws.Range("F2").Value = "" Then errMsg = errMsg & "Feld F2 auf " & ws.Name & "; "
+    If ws.Range("F6").Value = "" Then errMsg = errMsg & "Feld F6 auf " & ws.Name & "; "
+    If ws.Range("I6").Value = "" Then errMsg = errMsg & "Feld I6 auf " & ws.Name & "; "
+    
+    ' Falls Daten fehlen, zeige eine Warnmeldung und beende die Subroutine
+    If errMsg <> "" Then
+        MsgBox "Erforderliche Zelleninformationen fehlen auf dem Blatt " & ws.Name & ": " & errMsg, vbExclamation, "Datenfehler"
+        Exit Sub
+    End If
+
+    ' Info2 und Artikelnummer aus den entsprechenden Arbeitsblättern holen
+    info2 = ThisWorkbook.Sheets("Stammdaten").Range("B17").Value
+    artikelNummer = ws.Range("F2").Value
+
+    ' Stamm-Pfad zusammenstellen basierend auf dem ersten Buchstaben von Info2, dem gesamten Info2-Wert und der Artikelnummer
+    articleFolder = Left(info2, 1) & "\" & info2 & "\" & artikelNummer & "\"
+
     ' Dateiname basierend auf den Feldern F2, F6 und I6
-    fileName = ActiveSheet.Range("F2").Value & "-" & ActiveSheet.Range("F6").Value & "-AG" & ActiveSheet.Range("I6").Value & ".pdf"
-    
+    fileName = artikelNummer & "-" & ws.Range("F6").Value & "-AG" & ws.Range("I6").Value & ".pdf"
+
     ' Erster Option-Pfad
     firstOptionPath = basePath & articleFolder & "Zeichnungsdaten\" & fileName
-    
+
     ' Zweiter Option-Pfad (Fallback, falls erster Pfad nicht existiert)
-    secondOptionPath = basePath & articleFolder & "Zeichnungsdaten\" & ActiveSheet.Range("F2").Value & "-" & ActiveSheet.Range("F6").Value & ".pdf"
-    
+    secondOptionPath = basePath & articleFolder & "Zeichnungsdaten\" & artikelNummer & "-" & ws.Range("F6").Value & ".pdf"
+
     ' Dritter Option-Pfad (fallback auf JPG-Pfad)
-    fallbackPath = "\\MS01\Datenpfad\Fauser\Zeichnungen\" & ActiveSheet.Range("F2").Value & ".jpg"
-    
+    fallbackPath = "\\MS01\Datenpfad\Fauser\Zeichnungen\" & artikelNummer & ".jpg"
+
     ' Überprüfen, ob die Datei existiert und den Hyperlink in Zelle I7 setzen
     If FileExists(firstOptionPath) Then
-        ActiveSheet.Range("I7").Hyperlinks.Add Anchor:=ActiveSheet.Range("I7"), Address:=firstOptionPath, TextToDisplay:="Arbeitsgang-Zeichnung"
+        ws.Range("I7").Hyperlinks.Add Anchor:=ws.Range("I7"), Address:=firstOptionPath, TextToDisplay:="Arbeitsgang-Zeichnung"
     ElseIf FileExists(secondOptionPath) Then
-        ActiveSheet.Range("I7").Hyperlinks.Add Anchor:=ActiveSheet.Range("I7"), Address:=secondOptionPath, TextToDisplay:="Arbeitsgang-Zeichnung"
+        ws.Range("I7").Hyperlinks.Add Anchor:=ws.Range("I7"), Address:=secondOptionPath, TextToDisplay:="Arbeitsgang-Zeichnung"
     Else
-        ActiveSheet.Range("I7").Hyperlinks.Add Anchor:=ActiveSheet.Range("I7"), Address:=fallbackPath, TextToDisplay:="Arbeitsgang-Zeichnung"
+        ws.Range("I7").Hyperlinks.Add Anchor:=ws.Range("I7"), Address:=fallbackPath, TextToDisplay:="Arbeitsgang-Zeichnung"
     End If
 End Sub
+

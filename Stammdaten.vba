@@ -67,6 +67,9 @@ Sub RefreshData(orderNumber As String)
         ws.Range("B15").Value = rs.Fields("Sollstückzahl").Value
         ws.Range("B16").Value = rs.Fields("Kunde").Value
         ws.Range("B17").Value = rs.Fields("Info2").Value
+        
+        Call UpdateHyperlinksInAGSheets
+        
     End If
 
     ' Schließe das Recordset und die Verbindung
@@ -75,3 +78,5 @@ Sub RefreshData(orderNumber As String)
     Set rs = Nothing
     Set conn = Nothing
 End Sub
+
+
