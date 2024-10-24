@@ -85,5 +85,3 @@ Sub RefreshData(orderNumber As String)
     Set rs = Nothing
     Set conn = Nothing
 End Sub
-
-
