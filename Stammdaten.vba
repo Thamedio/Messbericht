@@ -35,15 +35,13 @@ Sub RefreshData(orderNumber As String)
       "OR_ORDER.COMMNO AS Materialeingangsnummer, " & _
       "CU_COMP.NAME AS Kunde, " & _
       "CU_COMP.INFO2 AS Info2 " & _
-      "FROM PA_PAPER pap " & _
-      "INNER JOIN PA_POSIT pos ON (pap.PANO = pos.PANO) " & _
-      "INNER JOIN OR_ORDER ON (pos.POSTNAME = OR_ORDER.NAME) " & _
+      "FROM OR_ORDER " & _
+      "LEFT JOIN PA_POSIT pos ON (pos.POSTNAME = OR_ORDER.NAME) " & _
+      "LEFT JOIN PA_PAPER pap ON (pap.PANO = pos.PANO) " & _
       "LEFT OUTER JOIN fag_detail fag ON fag.FKNO = pap.PANO AND fag.TYP = 3 " & _
       "LEFT JOIN CU_COMP ON OR_ORDER.KCONO = CU_COMP.CONO " & _
       "LEFT JOIN OR_PROJ ON OR_ORDER.PRONO = OR_PROJ.NO " & _
-      "WHERE pap.IDENT IN (1, 101) AND pos.POSTNAME = '" & orderNumber & "' " & _
-      "ORDER BY pap.PANO DESC;"
-
+      "WHERE OR_ORDER.NAME = '" & orderNumber & "' "
 
 
     ' Öffne ein Recordset
