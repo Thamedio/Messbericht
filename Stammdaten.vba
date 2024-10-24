@@ -21,22 +21,18 @@ Sub RefreshData(orderNumber As String)
     conn.Open "Provider=SQLOLEDB;Data Source=MS01\mothessql;Initial Catalog=ISDATA;User ID=sa;Password=sa;"
 
     ' Setze die SQL-Abfrage mit der neuen Auftragsnummer
-    sql = "SELECT OR_ORDER.NAME AS Auftragsnummer, " & _
-          "OR_ORDER.PRONO AS Projekt, " & _
-          "OR_ORDER.DESCR AS Bezeichnung, " & _
-          "OR_ORDER.ARTNO AS Artikelnummer, " & _
-          "OR_ORDER.DRAWNO AS Zeichnungsnummer, " & _
-          "OR_ORDER.DRAWIND AS [Index], " & _
-          "OR_ORDER.INFO1 AS Werkstoff, " & _
-          "OR_ORDER.TYPE AS Fertigungstyp, " & _
-          "OR_ORDER.DELIVERY AS Liefertermin, " & _
-          "OR_ORDER.IDENT AS Teilenummer, " & _
-          "OR_ORDER.PPARTS AS Sollstückzahl, " & _
-          "CU_COMP.NAME AS Kunde, " & _
-          "CU_COMP.INFO2 AS Info2 " & _
-          "FROM OR_ORDER " & _
-          "LEFT JOIN CU_COMP ON OR_ORDER.KCONO = CU_COMP.CONO " & _
-          "WHERE OR_ORDER.NAME = '" & orderNumber & "';"
+    sql = "SELECT fag.TXT05 AS Hauptordner, ord.NAME AS Auftragsnummer, ord.PRONO AS Projekt, " & _
+          "ord.DESCR AS Bezeichnung, ord.ARTNO AS Artikelnummer, ord.DRAWNO AS Zeichnungsnummer, " & _
+          "ord.DRAWIND AS [Index], ord.INFO1 AS Werkstoff, ord.TYPE AS Fertigungstyp, " & _
+          "ord.DELIVERY AS Liefertermin, ord.IDENT AS Teilenummer, ord.PPARTS AS Sollstückzahl, " & _
+          "cu.NAME AS Kunde, cu.INFO2 AS Info2 " & _
+          "FROM PA_PAPER pap " & _
+          "INNER JOIN PA_POSIT pos ON (pap.PANO = pos.PANO) " & _
+          "INNER JOIN OR_ORDER ord ON (pos.POSTNAME = ord.NAME) " & _
+          "LEFT OUTER JOIN fag_detail fag ON fag.FKNO = pap.PANO AND fag.TYP = 3 " & _
+          "LEFT JOIN CU_COMP cu ON ord.KCONO = cu.CONO " & _
+          "WHERE pap.IDENT IN (1, 101) AND pos.POSTNAME = '" & orderNumber & "' " & _
+          "ORDER BY pap.PANO DESC;"
 
     ' Öffne ein Recordset
     rs.Open sql, conn, 1, 3  ' adOpenKeyset, adLockOptimistic
@@ -67,9 +63,20 @@ Sub RefreshData(orderNumber As String)
         ws.Range("B15").Value = rs.Fields("Sollstückzahl").Value
         ws.Range("B16").Value = rs.Fields("Kunde").Value
         ws.Range("B17").Value = rs.Fields("Info2").Value
+        ws.Range("B20").Value = rs.Fields("Hauptordner").Value  ' Fülle die Zelle mit dem Hauptordner
+
+        ' Berechne den Artikelordner-Pfad
+        Dim basePath As String
+        Dim info2 As String
+        Dim artikelNummer As String
+        basePath = "\\MS01\Datenpfad\Betriebsorganisation\Fertigungsdaten\"
+        info2 = ws.Range("B17").Value
+        artikelNummer = ws.Range("B9").Value
+        Dim articleFolder As String
+        articleFolder = basePath & Left(info2, 1) & "\" & info2 & "\" & artikelNummer & "\"
+        ws.Range("B19").Value = articleFolder
         
         Call UpdateHyperlinksInAGSheets
-        
     End If
 
     ' Schließe das Recordset und die Verbindung

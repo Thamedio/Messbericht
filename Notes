@@ -1,0 +1,2 @@
+SELECT pos.* FROM PA_PAPER pap INNER JOIN PA_POSIT pos ON ( pap.PANO = pos.PANO ) INNER JOIN OR_ORDER ord ON ( pos.POSTNAME = ord.NAME AND ord.NO = 89700 ) WHERE pap.IDENT IN ( 1, 101 )
+select txt05 from fag_detail where typ=3 and fkno=pano
